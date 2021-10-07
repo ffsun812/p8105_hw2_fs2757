@@ -13,35 +13,47 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(readxl)
-getwd()
 ```
 ##  Problem 1
 First I read and clean the Mr. Trash Wheel sheet, and I use reasonable variable names for this data. Furthermore, I omit rows that do not include dumpster-specific data and round the number of sports balls to the nearest integer.
 ```{r}
-
 TrashWheel_data = read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet = "Mr. Trash Wheel",range = "A2:N408")
 TrashWheel_data = 
                   janitor::clean_names(TrashWheel_data) %>% 
                   drop_na(dumpster)%>% 
-                  mutate(sports_balls = round(sports_balls,digits = 0))        
+                  mutate(sports_balls = round(sports_balls,digits = 0))   
+skimr::skim(TrashWheel_data)
 ```
 Read and clean precipitation data for 2018 and 2019. For each, omit rows without precipitation data and add a variable for year. Next, combine precipitation datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
 ```{r}
 precipitation_2019 = 
-  read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet = "2019 Precipitation",skip = 1)%>%
+  read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet = "2019 Precipitation",skip = 1, range = "A2:B14")%>%
   janitor::clean_names()%>%
   mutate(year= "2019")%>%
   drop_na()
 
 precipitation_2018 = 
-  read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet = "2018 Precipitation",skip = 1)%>%
+  read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet = "2018 Precipitation",skip = 1, range = "A2:B14")%>%
   janitor::clean_names()%>%
   mutate(year= "2018")%>%
   drop_na()
 
-precip20182019 = 
+precipitation20182019 = 
   bind_rows(precipitation_2019, precipitation_2018) %>%
-  mutate(month.name[month]) 
-  
-
+  janitor::clean_names()%>%
+  mutate(month = month.name[month]) 
 ```
+For dataset `TrashWheel_data`, in the code `r skimr::skim(TrashWheel_data)`, we could know that the summary information about the dataset. There are `r length(TrashWheel_data)` observations, `r nrow(TrashWheel_data)` rows and `r ncol(TrashWheel_data)` columns. By coding `r names(TrashWheel_data)`, we could know that 14 different variable names.
+
+For dataset `precipitation_2019`, in the code `r skimr::skim(precipitation_2019)`, we also could know that the summary information. There are `r length(precipitation_2019)` observations, `r nrow(precipitation_2019)` rows and `r ncol(precipitation_2019)` columns. By coding `r names(precipitation_2019)`, we could know that 3 different variable names.
+
+For dataset `precipitation_2018`, in the code `r skimr::skim(precipitation_2018)`, we also could know that the summary information. There are `r length(precipitation_2018)` observations, `r nrow(precipitation_2018)` rows and `r ncol(precipitation_2018)` columns. By coding `r names(precipitation_2018)`, we could know that 3 different variable names.
+
+For dataset `precipitation20182019`, in the code `r skimr::skim(precipitation20182019)`, we also could know that the summary information. There are `r length(precipitation20182019)` observations, `r nrow(precipitation20182019)` rows and `r ncol(precipitation20182019)` columns. By coding `r names(precipitation20182019)`, we could know that 3 different variable names.
+
+The total precipitation in 2018 is `r sum(pull(precipitation_2018, total))`, and the median number of sports balls in a dumpster in 2019 is `r  median(pull(filter(TrashWheel_data, year == 2019),sports_balls))`.
+
+
+
+##  Problem 2
+
