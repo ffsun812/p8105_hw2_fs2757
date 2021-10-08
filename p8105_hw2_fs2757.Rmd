@@ -13,11 +13,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(readxl)
+library(dplyr)
 ```
 ##  Problem 1
 First I read and clean the Mr. Trash Wheel sheet, and I use reasonable variable names for this data. Furthermore, I omit rows that do not include dumpster-specific data and round the number of sports balls to the nearest integer.
 ```{r}
-TrashWheel_data = read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet = "Mr. Trash Wheel",range = "A2:N408")
+TrashWheel_data = read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "Mr. Trash Wheel",range = "A2:N408")
 TrashWheel_data = 
                   janitor::clean_names(TrashWheel_data) %>% 
                   drop_na(dumpster)%>% 
@@ -27,13 +28,13 @@ skimr::skim(TrashWheel_data)
 Read and clean precipitation data for 2018 and 2019. For each, omit rows without precipitation data and add a variable for year. Next, combine precipitation datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
 ```{r}
 precipitation_2019 = 
-  read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet = "2019 Precipitation",skip = 1, range = "A2:B14")%>%
+  read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "2019 Precipitation",skip = 1, range = "A2:B14")%>%
   janitor::clean_names()%>%
   mutate(year= "2019")%>%
   drop_na()
 
 precipitation_2018 = 
-  read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-8-6-19.xlsx",sheet = "2018 Precipitation",skip = 1, range = "A2:B14")%>%
+  read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "2018 Precipitation",skip = 1, range = "A2:B14")%>%
   janitor::clean_names()%>%
   mutate(year= "2018")%>%
   drop_na()
@@ -53,7 +54,46 @@ For dataset `precipitation20182019`, in the code `r skimr::skim(precipitation201
 
 The total precipitation in 2018 is `r sum(pull(precipitation_2018, total))`, and the median number of sports balls in a dumpster in 2019 is `r  median(pull(filter(TrashWheel_data, year == 2019),sports_balls))`.
 
-
+  
 
 ##  Problem 2
+```{r}
+pols_month=read_csv("/Users/sunfei/Desktop/pols-month.csv") %>%
+          janitor::clean_names() %>%
+          separate(mon,into = c("year","month","day"))%>%
+          mutate(day = as.numeric(day))%>%
+          mutate(year = as.numeric(year))%>%
+          mutate(month = month.name[as.numeric(month)])%>%
+          mutate(president = ifelse(prez_dem == 0, "gop", "dem"))%>%
+          select(-"day", -"prez_gop", -"prez_dem") 
 
+
+snp=read_csv("/Users/sunfei/Desktop/snp.csv")%>%
+          janitor::clean_names()%>%
+          mutate(date = lubridate::mdy(date)) %>% 
+          separate(date, into = c("year", "month", "day")) %>% 
+          mutate(year = as.numeric(year))%>% 
+          mutate(day = as.numeric(day))%>% 
+          mutate(month = month.name[as.numeric(month)]) %>% 
+          select(-"day") 
+
+unemployment=read_csv("/Users/sunfei/Desktop/unemployment.csv")%>%
+          pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment")%>% 
+          janitor::clean_names()%>%
+          mutate(year = as.numeric(year))
+
+mergeddata =left_join(pols_month, snp, by = c("year", "month")) %>% 
+            left_join(unemployment, by = c("year", "month"))
+
+```
+The datasets `pols_month` has `r nrow(pols_month)` rows and `r ncol(pols_month)` columns. By coding `r names(pols_month)`, we could know that 9 different variable names. Also I could get the range of years by coding `r range(pull(pols_month, year))`.
+
+The datasets `snp` has `r nrow(snp)` rows and `r ncol(snp)` columns. By coding `r names(snp)`, we could know that 3 different variable names. Also I could get the range of years by coding `r range(pull(snp, year))`.
+
+The datasets `unemployment` has `r nrow(unemployment)` rows and `r ncol(unemployment)` columns. By coding `r names(unemployment)`, we could know that 3 different variable names. Also I could get the range of years by coding `r range(pull(unemployment, year))`.
+
+The datasets `mergeddata` has `r nrow(mergeddata)` rows and `r ncol(mergeddata)` columns. By coding `r names(mergeddata)`, we could know that 11 different variable names. Also I could get the range of years by coding `r range(pull(mergeddata, year))`.
+
+
+
+##  Problem 3
