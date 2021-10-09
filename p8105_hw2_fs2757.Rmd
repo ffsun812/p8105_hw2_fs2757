@@ -18,11 +18,11 @@ library(dplyr)
 ##  Problem 1
 First I read and clean the Mr. Trash Wheel sheet, and I use reasonable variable names for this data. Furthermore, I omit rows that do not include dumpster-specific data and round the number of sports balls to the nearest integer.
 ```{r}
-TrashWheel_data = read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "Mr. Trash Wheel",range = "A2:N408")
+TrashWheel_data = read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "Mr. Trash Wheel",range = "A2:N534")
 TrashWheel_data = 
-                  janitor::clean_names(TrashWheel_data) %>% 
-                  drop_na(dumpster)%>% 
-                  mutate(sports_balls = round(sports_balls,digits = 0))   
+  janitor::clean_names(TrashWheel_data) %>% 
+  drop_na(dumpster)%>% 
+  mutate(sports_balls = round(sports_balls,digits = 0))   
 skimr::skim(TrashWheel_data)
 ```
 Read and clean precipitation data for 2018 and 2019. For each, omit rows without precipitation data and add a variable for year. Next, combine precipitation datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
@@ -59,32 +59,26 @@ The total precipitation in 2018 is `r sum(pull(precipitation_2018, total))`, and
 ##  Problem 2
 ```{r}
 pols_month=read_csv("/Users/sunfei/Desktop/pols-month.csv") %>%
-          janitor::clean_names() %>%
-          separate(mon,into = c("year","month","day"))%>%
-          mutate(day = as.numeric(day))%>%
-          mutate(year = as.numeric(year))%>%
-          mutate(month = month.name[as.numeric(month)])%>%
-          mutate(president = ifelse(prez_dem == 0, "gop", "dem"))%>%
-          select(-"day", -"prez_gop", -"prez_dem") 
-
-
+  janitor::clean_names() %>%
+  separate(mon,into = c("year","month","day"))%>%
+  mutate(month = month.name[as.numeric(month)],day = as.numeric(day),year = as.numeric(year))%>%
+  mutate(president = ifelse(prez_dem == 0, "gop", "dem"))%>%
+  select(-"day", -"prez_gop", -"prez_dem") 
+          
 snp=read_csv("/Users/sunfei/Desktop/snp.csv")%>%
-          janitor::clean_names()%>%
-          mutate(date = lubridate::mdy(date)) %>% 
-          separate(date, into = c("year", "month", "day")) %>% 
-          mutate(year = as.numeric(year))%>% 
-          mutate(day = as.numeric(day))%>% 
-          mutate(month = month.name[as.numeric(month)]) %>% 
-          select(-"day") 
+  janitor::clean_names()%>%
+  mutate(date = lubridate::mdy(date)) %>% 
+  separate(date, into = c("year", "month", "day")) %>% 
+  mutate(month = month.name[as.numeric(month)],day = as.numeric(day),year = as.numeric(year)) %>% 
+  select(-"day") 
 
 unemployment=read_csv("/Users/sunfei/Desktop/unemployment.csv")%>%
-          pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment")%>% 
-          janitor::clean_names()%>%
-          mutate(year = as.numeric(year))
+  pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment")%>% 
+  janitor::clean_names()%>%
+  mutate(year = as.numeric(year))
 
-mergeddata =left_join(pols_month, snp, by = c("year", "month")) %>% 
-            left_join(unemployment, by = c("year", "month"))
-
+mergeddata_1=left_join(pols_month, snp, by = c("year", "month")) 
+mergeddata_2=left_join(unemployment,mergeddata_1, by = c("year", "month"))
 ```
 The datasets `pols_month` has `r nrow(pols_month)` rows and `r ncol(pols_month)` columns. By coding `r names(pols_month)`, we could know that 9 different variable names. Also I could get the range of years by coding `r range(pull(pols_month, year))`.
 
@@ -92,8 +86,35 @@ The datasets `snp` has `r nrow(snp)` rows and `r ncol(snp)` columns. By coding `
 
 The datasets `unemployment` has `r nrow(unemployment)` rows and `r ncol(unemployment)` columns. By coding `r names(unemployment)`, we could know that 3 different variable names. Also I could get the range of years by coding `r range(pull(unemployment, year))`.
 
-The datasets `mergeddata` has `r nrow(mergeddata)` rows and `r ncol(mergeddata)` columns. By coding `r names(mergeddata)`, we could know that 11 different variable names. Also I could get the range of years by coding `r range(pull(mergeddata, year))`.
-
+The datasets `mergeddata_2` has `r nrow(mergeddata_2)` rows and `r ncol(mergeddata_2)` columns. By coding `r names(mergeddata_2)`, we could know that 11 different variable names. Also I could get the range of years by coding `r range(pull(mergeddata_2, year))`.
 
 
 ##  Problem 3
+```{r}
+# cleaning the data/converting the uppercase letters about name and gender to lowercase string/converting ambiguous ethnicity word to the official one.
+PopularBabyNames=read_csv("/Users/sunfei/Desktop/Popular_Baby_Names.csv")%>%
+  janitor::clean_names()%>%
+  mutate(childs_first_name = tolower(childs_first_name),ethnicity = as.factor(ethnicity),gender = tolower(gender))%>%
+  mutate(ethnicity = recode(ethnicity, `ASIAN AND PACI` = "ASIAN AND PACIFIC ISLANDER", `BLACK NON HISP ` = "BLACK NON HISPANIC", `WHITE NON HISP` = "WHITE NON HISPANIC"))
+
+# removing the duplicated rows 
+PopularBabyNames = PopularBabyNames[!duplicated(PopularBabyNames),]
+
+# showing and doing a clear and reader-friendly table about the rank in popularity of the name “Olivia” as a female name 
+olivia = PopularBabyNames %>% 
+  filter(childs_first_name == "olivia") %>% 
+  pivot_wider(names_from = "year_of_birth", values_from = "count")
+  knitr::kable(olivia)
+
+# showing and doing a clear and reader-friendly table about the rank in popularity of the male name
+popularmalename=PopularBabyNames %>% 
+  filter(gender == "male", rank == "1") %>% 
+  pivot_wider(names_from = "year_of_birth", values_from = "count")
+  knitr::kable(popularmalename)
+
+# showing a graph about the name and the rank in popularity of white non-hispanic make children born in 2016
+malewhitenonhispanicin2016=PopularBabyNames %>% 
+  filter(gender == "male", year_of_birth=="2016",ethnicity=="WHITE NON HISPANIC")  
+
+ggplot(malewhitenonhispanicin2016, aes(x = rank, y = count)) + geom_point()+ylab("number of children with the popularity name") + xlab("rank in popularity name")
+```
