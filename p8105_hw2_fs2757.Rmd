@@ -9,7 +9,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, message = FALSE}
 library(tidyverse)
 library(readxl)
 library(dplyr)
@@ -23,27 +23,26 @@ TrashWheel_data =
   janitor::clean_names(TrashWheel_data) %>% 
   drop_na(dumpster)%>% 
   mutate(sports_balls = round(sports_balls,digits = 0))   
+
 skimr::skim(TrashWheel_data)
 
 #Reading and cleaning precipitation data for each 2018 and 2019/ combining the two precipitation datasets/converting month to a character variable
 precipitation_2019 = 
   read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "2019 Precipitation",skip = 1, range = "A2:B14")%>%
   janitor::clean_names()%>%
-  mutate(year= "2019")%>%
-  drop_na()
+  mutate(year= "2019",month = month.name[month])
 precipitation_2019
 
 precipitation_2018 = 
   read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "2018 Precipitation",skip = 1, range = "A2:B14")%>%
   janitor::clean_names()%>%
-  mutate(year= "2018")%>%
-  drop_na()
+  mutate(year= "2018",month = month.name[month])
 precipitation_2018
 
 precipitation20182019 = 
   bind_rows(precipitation_2019, precipitation_2018) %>%
-  janitor::clean_names()%>%
-  mutate(month = month.name[month]) 
+  janitor::clean_names()
+
 precipitation20182019
 ```
 For dataset `TrashWheel_data`, in the code `skimr::skim(TrashWheel_data)`, we could know that the summary information about the dataset. There are `r length(TrashWheel_data)` observations, `nrow(TrashWheel_data)` rows and ` ncol(TrashWheel_data)` columns. By coding `names(TrashWheel_data)`, we could know that 14 different variable names.
