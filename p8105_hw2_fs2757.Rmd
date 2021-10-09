@@ -15,106 +15,124 @@ library(tidyverse)
 library(readxl)
 library(dplyr)
 ```
-##  Problem 1
-First I read and clean the Mr. Trash Wheel sheet, and I use reasonable variable names for this data. Furthermore, I omit rows that do not include dumpster-specific data and round the number of sports balls to the nearest integer.
+
+#  Problem 1
 ```{r}
-TrashWheel_data = read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "Mr. Trash Wheel",range = "A2:N534")
+# cleaning the dataset/using reasonable variable names/omitting rows/rounding the number of sports balls to the nearest integer
+TrashWheel_data = read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "Mr. Trash Wheel",range = "A2:N535")
 TrashWheel_data = 
   janitor::clean_names(TrashWheel_data) %>% 
   drop_na(dumpster)%>% 
   mutate(sports_balls = round(sports_balls,digits = 0))   
 skimr::skim(TrashWheel_data)
-```
-Read and clean precipitation data for 2018 and 2019. For each, omit rows without precipitation data and add a variable for year. Next, combine precipitation datasets and convert month to a character variable (the variable month.name is built into R and should be useful).
-```{r}
+
+#Reading and cleaning precipitation data for each 2018 and 2019/ combining the two precipitation datasets/converting month to a character variable
 precipitation_2019 = 
   read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "2019 Precipitation",skip = 1, range = "A2:B14")%>%
   janitor::clean_names()%>%
   mutate(year= "2019")%>%
   drop_na()
+precipitation_2019
 
 precipitation_2018 = 
   read_excel("/Users/sunfei/Desktop/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",sheet = "2018 Precipitation",skip = 1, range = "A2:B14")%>%
   janitor::clean_names()%>%
   mutate(year= "2018")%>%
   drop_na()
+precipitation_2018
 
 precipitation20182019 = 
   bind_rows(precipitation_2019, precipitation_2018) %>%
   janitor::clean_names()%>%
   mutate(month = month.name[month]) 
+precipitation20182019
 ```
-For dataset `TrashWheel_data`, in the code `r skimr::skim(TrashWheel_data)`, we could know that the summary information about the dataset. There are `r length(TrashWheel_data)` observations, `r nrow(TrashWheel_data)` rows and `r ncol(TrashWheel_data)` columns. By coding `r names(TrashWheel_data)`, we could know that 14 different variable names.
+For dataset `TrashWheel_data`, in the code `skimr::skim(TrashWheel_data)`, we could know that the summary information about the dataset. There are `r length(TrashWheel_data)` observations, `nrow(TrashWheel_data)` rows and ` ncol(TrashWheel_data)` columns. By coding `names(TrashWheel_data)`, we could know that 14 different variable names.
 
-For dataset `precipitation_2019`, in the code `r skimr::skim(precipitation_2019)`, we also could know that the summary information. There are `r length(precipitation_2019)` observations, `r nrow(precipitation_2019)` rows and `r ncol(precipitation_2019)` columns. By coding `r names(precipitation_2019)`, we could know that 3 different variable names.
+For dataset `precipitation_2019`, in the code `skimr::skim(precipitation_2019)`, we also could know that the summary information. There are ` length(precipitation_2019)` observations, `nrow(precipitation_2019)` rows and ` ncol(precipitation_2019)` columns. By coding ` names(precipitation_2019)`, we could know that 3 different variable names.
 
-For dataset `precipitation_2018`, in the code `r skimr::skim(precipitation_2018)`, we also could know that the summary information. There are `r length(precipitation_2018)` observations, `r nrow(precipitation_2018)` rows and `r ncol(precipitation_2018)` columns. By coding `r names(precipitation_2018)`, we could know that 3 different variable names.
+For dataset `precipitation_2018`, in the code `skimr::skim(precipitation_2018)`, we also could know that the summary information. There are ` length(precipitation_2018)` observations, `nrow(precipitation_2018)` rows and ` ncol(precipitation_2018)` columns. By coding `names(precipitation_2018)`, we could know that 3 different variable names.
 
-For dataset `precipitation20182019`, in the code `r skimr::skim(precipitation20182019)`, we also could know that the summary information. There are `r length(precipitation20182019)` observations, `r nrow(precipitation20182019)` rows and `r ncol(precipitation20182019)` columns. By coding `r names(precipitation20182019)`, we could know that 3 different variable names.
+For dataset `precipitation20182019`, in the code ` skimr::skim(precipitation20182019)`, we also could know that the summary information. There are `length(precipitation20182019)` observations, ` nrow(precipitation20182019)` rows and `ncol(precipitation20182019)` columns. By coding ` names(precipitation20182019)`, we could know that 3 different variable names.
 
-The total precipitation in 2018 is `r sum(pull(precipitation_2018, total))`, and the median number of sports balls in a dumpster in 2019 is `r  median(pull(filter(TrashWheel_data, year == 2019),sports_balls))`.
+The total precipitation in 2018 is `sum(pull(precipitation_2018, total))`, and the median number of sports balls in a dumpster in 2019 is ` median(pull(filter(TrashWheel_data, year == 2019),sports_balls))`.
 
   
 
-##  Problem 2
+#  Problem 2
 ```{r}
+# cleaning the dataset/separating some whole variable to some integer variables(yyyy/mm/dd)/replacing the month number with month name/removing some variable
 pols_month=read_csv("/Users/sunfei/Desktop/pols-month.csv") %>%
   janitor::clean_names() %>%
   separate(mon,into = c("year","month","day"))%>%
   mutate(month = month.name[as.numeric(month)],day = as.numeric(day),year = as.numeric(year))%>%
   mutate(president = ifelse(prez_dem == 0, "gop", "dem"))%>%
-  select(-"day", -"prez_gop", -"prez_dem") 
-          
+  select(-"day", -"prez_gop", -"prez_dem")
+pols_month
+
+# cleaning and organizing the dataset
 snp=read_csv("/Users/sunfei/Desktop/snp.csv")%>%
   janitor::clean_names()%>%
   mutate(date = lubridate::mdy(date)) %>% 
   separate(date, into = c("year", "month", "day")) %>% 
   mutate(month = month.name[as.numeric(month)],day = as.numeric(day),year = as.numeric(year)) %>% 
   select(-"day") 
+snp
 
+# switching the dataset form and merging to the previous dataset
 unemployment=read_csv("/Users/sunfei/Desktop/unemployment.csv")%>%
   pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment")%>% 
   janitor::clean_names()%>%
   mutate(year = as.numeric(year))
+unemployment
 
+#merging all dataset
 mergeddata_1=left_join(pols_month, snp, by = c("year", "month")) 
 mergeddata_2=left_join(unemployment,mergeddata_1, by = c("year", "month"))
+mergeddata_2
 ```
-The datasets `pols_month` has `r nrow(pols_month)` rows and `r ncol(pols_month)` columns. By coding `r names(pols_month)`, we could know that 9 different variable names. Also I could get the range of years by coding `r range(pull(pols_month, year))`.
 
-The datasets `snp` has `r nrow(snp)` rows and `r ncol(snp)` columns. By coding `r names(snp)`, we could know that 3 different variable names. Also I could get the range of years by coding `r range(pull(snp, year))`.
+### briefly explain
 
-The datasets `unemployment` has `r nrow(unemployment)` rows and `r ncol(unemployment)` columns. By coding `r names(unemployment)`, we could know that 3 different variable names. Also I could get the range of years by coding `r range(pull(unemployment, year))`.
+ The datasets `pols_month` has ` nrow(pols_month)` rows and `ncol(pols_month)` columns. By coding ` names(pols_month)`, we could know that 9 different variable names. Also I could get the range of years by coding `range(pull(pols_month, year))`.
 
-The datasets `mergeddata_2` has `r nrow(mergeddata_2)` rows and `r ncol(mergeddata_2)` columns. By coding `r names(mergeddata_2)`, we could know that 11 different variable names. Also I could get the range of years by coding `r range(pull(mergeddata_2, year))`.
+The datasets `snp` has ` nrow(snp)` rows and ` ncol(snp)` columns. By coding ` names(snp)`, we could know that 3 different variable names. Also I could get the range of years by coding ` range(pull(snp, year))`.
+
+ The datasets `unemployment` has ` nrow(unemployment)` rows and ` ncol(unemployment)` columns. By coding ` names(unemployment)`, we could know that 3 different variable names. Also I could get the range of years by coding ` range(pull(unemployment, year))`.
+
+The datasets `mergeddata_2` has ` nrow(mergeddata_2)` rows and ` ncol(mergeddata_2)` columns. By coding ` names(mergeddata_2)`, we could know that 11 different variable names. Also I could get the range of years by coding ` range(pull(mergeddata_2, year))`.
 
 
-##  Problem 3
+#  Problem 3
 ```{r}
 # cleaning the data/converting the uppercase letters about name and gender to lowercase string/converting ambiguous ethnicity word to the official one.
 PopularBabyNames=read_csv("/Users/sunfei/Desktop/Popular_Baby_Names.csv")%>%
   janitor::clean_names()%>%
-  mutate(childs_first_name = tolower(childs_first_name),ethnicity = as.factor(ethnicity),gender = tolower(gender))%>%
+  mutate(childs_first_name = toupper(childs_first_name),ethnicity = as.factor(ethnicity),gender = toupper(gender))%>%
   mutate(ethnicity = recode(ethnicity, `ASIAN AND PACI` = "ASIAN AND PACIFIC ISLANDER", `BLACK NON HISP ` = "BLACK NON HISPANIC", `WHITE NON HISP` = "WHITE NON HISPANIC"))
 
 # removing the duplicated rows 
 PopularBabyNames = PopularBabyNames[!duplicated(PopularBabyNames),]
+PopularBabyNames
 
 # showing and doing a clear and reader-friendly table about the rank in popularity of the name “Olivia” as a female name 
 olivia = PopularBabyNames %>% 
-  filter(childs_first_name == "olivia") %>% 
+  filter(childs_first_name == "OLIVIA") %>% 
   pivot_wider(names_from = "year_of_birth", values_from = "count")
   knitr::kable(olivia)
+olivia
 
 # showing and doing a clear and reader-friendly table about the rank in popularity of the male name
 popularmalename=PopularBabyNames %>% 
-  filter(gender == "male", rank == "1") %>% 
+  filter(gender == "MALE", rank == "1") %>% 
   pivot_wider(names_from = "year_of_birth", values_from = "count")
   knitr::kable(popularmalename)
+popularmalename
 
 # showing a graph about the name and the rank in popularity of white non-hispanic make children born in 2016
 malewhitenonhispanicin2016=PopularBabyNames %>% 
-  filter(gender == "male", year_of_birth=="2016",ethnicity=="WHITE NON HISPANIC")  
+  filter(gender == "MALE", year_of_birth=="2016",ethnicity=="WHITE NON HISPANIC")  
+malewhitenonhispanicin2016
 
 ggplot(malewhitenonhispanicin2016, aes(x = rank, y = count)) + geom_point()+ylab("number of children with the popularity name") + xlab("rank in popularity name")
 ```
