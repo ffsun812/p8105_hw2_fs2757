@@ -44,6 +44,10 @@ precipitation20182019 =
   janitor::clean_names()
 
 precipitation20182019
+
+sum(pull(precipitation_2018, total))
+
+median(pull(filter(TrashWheel_data, year == 2019),sports_balls))
 ```
 For dataset `TrashWheel_data`, in the code `skimr::skim(TrashWheel_data)`, we could know that the summary information about the dataset. There are `r length(TrashWheel_data)` observations, `nrow(TrashWheel_data)` rows and ` ncol(TrashWheel_data)` columns. By coding `names(TrashWheel_data)`, we could know that 14 different variable names.
 
@@ -53,7 +57,7 @@ For dataset `precipitation_2018`, in the code `skimr::skim(precipitation_2018)`,
 
 For dataset `precipitation20182019`, in the code ` skimr::skim(precipitation20182019)`, we also could know that the summary information. There are `length(precipitation20182019)` observations, ` nrow(precipitation20182019)` rows and `ncol(precipitation20182019)` columns. By coding ` names(precipitation20182019)`, we could know that 3 different variable names.
 
-The total precipitation in 2018 is `sum(pull(precipitation_2018, total))`, and the median number of sports balls in a dumpster in 2019 is ` median(pull(filter(TrashWheel_data, year == 2019),sports_balls))`.
+The total precipitation in 2018 is `sum(pull(precipitation_2018, total))` is 70.33, and the median number of sports balls in a dumpster in 2019 is ` median(pull(filter(TrashWheel_data, year == 2019),sports_balls))` is 9.
 
   
 
